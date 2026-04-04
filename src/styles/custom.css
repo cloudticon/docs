@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sl-font-system-mono: "JetBrains Mono", ui-monospace, SFMono-Regular,
+    Menlo, Monaco, Consolas, monospace;
+  --sl-content-width: 52rem;
+  --sl-text-2xl: 1.75rem;
+  --sl-text-3xl: 2.25rem;
+  --sl-text-4xl: 2.75rem;
+}
+
+/* Relaxed spacing */
+.sl-markdown-content :where(h2, h3, h4) {
+  margin-top: 2.5rem;
+}
+
+.sl-markdown-content :where(p, ul, ol) {
+  line-height: 1.8;
+}
+
+/* Mono accents in headings */
+.sl-markdown-content :where(h1, h2, h3) code {
+  font-size: 0.85em;
+  padding: 0.15em 0.35em;
+  border-radius: 0.25rem;
+}
+
+/* Hero section polish */
+.hero {
+  padding-block: 3rem;
+}
+
+.hero h1 {
+  font-size: var(--sl-text-4xl);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.hero .tagline {
+  font-size: var(--sl-text-2xl);
+  opacity: 0.85;
+}
+
+/* Sidebar refinements */
+nav.sidebar .top-level > li + li {
+  margin-top: 0.75rem;
+}
+
+/* Inline code in prose */
+.sl-markdown-content :not(pre) > code {
+  border-radius: 0.25rem;
+  padding: 0.15em 0.35em;
+  font-size: 0.875em;
+}
+
+/* Smooth link transitions */
+a {
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
