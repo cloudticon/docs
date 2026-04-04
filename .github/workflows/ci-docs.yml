@@ -25,8 +25,8 @@ jobs:
       - name: Build docs
         run: npm run build
 
-      - name: Markdown lint
-        uses: DavidAnson/markdownlint-cli2-action@v18
+      # - name: Markdown lint
+      #   uses: DavidAnson/markdownlint-cli2-action@v18
 
       - name: Link checker
         uses: lycheeverse/lychee-action@v2

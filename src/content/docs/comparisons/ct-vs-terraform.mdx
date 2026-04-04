@@ -3,6 +3,8 @@ title: CT vs Terraform
 description: CT generates Kubernetes YAML from TypeScript. Terraform provisions cloud infrastructure with HCL. Different tools for different layers.
 ---
 
+import CodeCompare from "../../../components/CodeCompare.astro";
+
 ## At a glance
 
 | Feature | CT | Terraform |
@@ -37,10 +39,7 @@ Terraform can manage Kubernetes resources via the `kubernetes` and `helm` provid
 
 ## Kubernetes resources: CT vs Terraform
 
-### Terraform — HCL resource blocks
-
-```hcl
-resource "kubernetes_deployment" "api" {
+export const terraformK8sCode = `resource "kubernetes_deployment" "api" {
   metadata {
     name      = "api"
     namespace = "production"
@@ -92,15 +91,10 @@ resource "kubernetes_service" "api" {
       target_port = 8080
     }
   }
-}
-```
+}`;
 
-Verbose. Each Kubernetes field maps to an HCL block/attribute. The provider translates HCL to Kubernetes API calls and tracks state.
-
-### CT — TypeScript factories
-
-```ts
-import { deployment, service } from "github.com/cloudticon/k8s@master";
+export const ctK8sCode = `import { deployment, service }
+  from "github.com/cloudticon/k8s@master";
 
 deployment({
   name: "api",
@@ -113,10 +107,19 @@ service({
   name: "api",
   port: 80,
   targetPort: 8080,
-});
-```
+});`;
 
-Concise. Factory helpers abstract away boilerplate. Output is YAML.
+<CodeCompare
+  leftCode={ctK8sCode}
+  leftLang="ts"
+  leftTitle="CT"
+  rightCode={terraformK8sCode}
+  rightLang="hcl"
+  rightTitle="Terraform"
+  rightCollapsible
+/>
+
+Concise factory helpers vs verbose HCL resource blocks. The provider translates HCL to Kubernetes API calls and tracks state. CT just outputs YAML.
 
 ## State: the fundamental difference
 
@@ -136,10 +139,7 @@ CT is **stateless**. It generates YAML. The only "state" is your Git repo and wh
 
 ## Logic and conditionals
 
-### Terraform — HCL constructs
-
-```hcl
-resource "kubernetes_deployment" "api" {
+export const terraformLogicCode = `resource "kubernetes_deployment" "api" {
   count = var.enable_api ? 1 : 0
 
   metadata {
@@ -168,15 +168,9 @@ resource "kubernetes_horizontal_pod_autoscaler" "api" {
       name        = kubernetes_deployment.api[0].metadata[0].name
     }
   }
-}
-```
+}`;
 
-`count` and `for_each` are the primary conditional mechanisms. Referencing conditional resources requires index syntax (`[0]`). Dynamic blocks add more complexity.
-
-### CT — real TypeScript
-
-```ts
-deployment({
+export const ctLogicCode = `deployment({
   name: "api",
   replicas: Values.replicas,
   image: Values.image,
@@ -189,38 +183,47 @@ if (Values.hpa?.enabled) {
     minReplicas: Values.replicas,
     maxReplicas: Values.hpa.max,
   });
-}
-```
+}`;
 
-Real `if`, real variables, real functions. No `count`, no index references.
+<CodeCompare
+  leftCode={ctLogicCode}
+  leftLang="ts"
+  leftTitle="CT"
+  rightCode={terraformLogicCode}
+  rightLang="hcl"
+  rightTitle="Terraform"
+  rightCollapsible
+/>
+
+`count` and `for_each` are the primary conditional mechanisms in HCL. Referencing conditional resources requires index syntax (`[0]`). CT uses real `if`, real variables, real functions.
 
 ## Modules vs imports
 
-### Terraform modules
-
-```hcl
-module "api" {
+export const terraformModuleCode = `module "api" {
   source = "git::https://github.com/my-org/tf-modules.git//k8s-app?ref=v1.0"
 
   name     = "api"
   image    = var.api_image
   replicas = var.replicas
-}
-```
+}`;
 
-Modules are directories with `variables.tf`, `outputs.tf`, and resource definitions. Version pinning via `?ref=`. Registry publishing for sharing.
-
-### CT imports
-
-```ts
-import { createApp } from "github.com/my-org/k8s-helpers@v1.0/app";
+export const ctModuleCode = `import { createApp }
+  from "github.com/my-org/k8s-helpers@v1.0/app";
 
 createApp({
   name: "api",
   image: Values.image,
   replicas: Values.replicas,
-});
-```
+});`;
+
+<CodeCompare
+  leftCode={ctModuleCode}
+  leftLang="ts"
+  leftTitle="CT"
+  rightCode={terraformModuleCode}
+  rightLang="hcl"
+  rightTitle="Terraform"
+/>
 
 Standard ES imports. Pin to a tag. No special module structure, no variable/output declarations.
 

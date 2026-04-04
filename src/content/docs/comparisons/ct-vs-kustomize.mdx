@@ -3,6 +3,8 @@ title: CT vs Kustomize
 description: Why TypeScript-first templating beats YAML patching, overlays, and Kustomize complexity.
 ---
 
+import CodeCompare from "../../../components/CodeCompare.astro";
+
 ## At a glance
 
 | Feature | CT | Kustomize |
@@ -21,27 +23,14 @@ description: Why TypeScript-first templating beats YAML patching, overlays, and 
 
 Kustomize starts from base YAML and **patches** it. CT **generates** YAML from code. This is a fundamental difference.
 
-### Kustomize — overlay with patches
+export const kustomizePatchCode = `# base/
+#   deployment.yaml, service.yaml, kustomization.yaml
+# overlays/
+#   dev/   → kustomization.yaml, replicas-patch.yaml
+#   staging/ → kustomization.yaml
+#   prod/  → kustomization.yaml, hpa.yaml
 
-```text
-base/
-  deployment.yaml
-  service.yaml
-  kustomization.yaml
-overlays/
-  dev/
-    kustomization.yaml      # patches for dev
-    replicas-patch.yaml
-  staging/
-    kustomization.yaml      # patches for staging
-  prod/
-    kustomization.yaml      # patches for prod
-    hpa.yaml
-```
-
-`overlays/dev/kustomization.yaml`:
-
-```yaml
+# overlays/dev/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
@@ -50,28 +39,22 @@ patches:
   - path: replicas-patch.yaml
 namePrefix: dev-
 namespace: development
-```
-
-`overlays/dev/replicas-patch.yaml`:
-
-```yaml
+---
+# overlays/dev/replicas-patch.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
 spec:
-  replicas: 1
-```
+  replicas: 1`;
 
-### CT — the same thing
-
-```ts
-import { deployment, service } from "github.com/cloudticon/k8s@master";
+export const ctPatchCode = `import { deployment, service, hpa }
+  from "github.com/cloudticon/k8s@master";
 
 const env = Values.env; // "dev" | "staging" | "prod"
 
 deployment({
-  name: `${env === "dev" ? "dev-" : ""}api`,
+  name: \`\${env === "dev" ? "dev-" : ""}api\`,
   namespace: Values.namespace,
   replicas: Values.replicas,
   image: Values.image,
@@ -90,90 +73,105 @@ if (env === "prod") {
     minReplicas: Values.replicas,
     maxReplicas: Values.maxReplicas,
   });
-}
-```
+}`;
+
+<CodeCompare
+  leftCode={ctPatchCode}
+  leftLang="ts"
+  leftTitle="CT"
+  rightCode={kustomizePatchCode}
+  rightLang="yaml"
+  rightTitle="Kustomize"
+  rightCollapsible
+/>
 
 One file, real `if`, real variables. No directory trees, no patch files, no mental model of "what is the base + what patches apply in what order."
 
 ## Environment handling
 
-### Kustomize — directory-per-environment
+export const kustomizeEnvCode = `# overlays/
+#   dev/
+#     kustomization.yaml
+#   staging/
+#     kustomization.yaml
+#   prod/
+#     kustomization.yaml
+#
+# Each environment is a directory with its own
+# kustomization.yaml that references the base
+# and adds patches. Shared changes must be
+# replicated or extracted into components.`;
 
-```text
-overlays/
-  dev/
-    kustomization.yaml
-  staging/
-    kustomization.yaml
-  prod/
-    kustomization.yaml
-```
+export const ctEnvCode = `ct template . \\
+  --values values-dev.json \\
+  --namespace dev
 
-Each environment is a directory with its own `kustomization.yaml` that references the base and adds patches. Shared changes must be replicated or extracted into components.
+ct template . \\
+  --values values-staging.json \\
+  --namespace staging
 
-### CT — values-per-environment
+ct template . \\
+  --values values-prod.json \\
+  --namespace prod`;
 
-```bash
-ct template . --values values-dev.json --namespace dev
-ct template . --values values-staging.json --namespace staging
-ct template . --values values-prod.json --namespace prod
-```
+<CodeCompare
+  leftCode={ctEnvCode}
+  leftLang="bash"
+  leftTitle="CT"
+  rightCode={kustomizeEnvCode}
+  rightLang="text"
+  rightTitle="Kustomize"
+/>
 
 Same template, different values. No directory duplication.
 
 ## Conditional resources
 
-### Kustomize — components
-
-To conditionally include resources, Kustomize uses **components** (since v3.7):
-
-```yaml
-# components/hpa/kustomization.yaml
+export const kustomizeConditionalCode = `# components/hpa/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 resources:
   - hpa.yaml
-```
-
-```yaml
+---
 # overlays/prod/kustomization.yaml
 components:
   - ../../components/hpa
-```
 
-Components can only be included or excluded per overlay — no runtime conditionals.
+# Components can only be included or excluded
+# per overlay — no runtime conditionals.`;
 
-### CT — just `if`
-
-```ts
-if (Values.hpa?.enabled) {
+export const ctConditionalCode = `if (Values.hpa?.enabled) {
   hpa({
     name: "api",
     minReplicas: Values.hpa.min,
     maxReplicas: Values.hpa.max,
   });
-}
-```
+}`;
+
+<CodeCompare
+  leftCode={ctConditionalCode}
+  leftLang="ts"
+  leftTitle="CT"
+  rightCode={kustomizeConditionalCode}
+  rightLang="yaml"
+  rightTitle="Kustomize"
+/>
 
 ## Labels and naming
 
-### Kustomize — transformers
-
-```yaml
-# kustomization.yaml
+export const kustomizeLabelsCode = `# kustomization.yaml
 commonLabels:
   app: myapp
   team: platform
 namePrefix: myapp-
 namespace: production
-```
 
-Labels are injected everywhere including selectors, which can cause issues with immutable fields. `namePrefix`/`nameSuffix` apply blindly to all resource names.
+# Labels are injected everywhere including
+# selectors, which can cause issues with
+# immutable fields. namePrefix/nameSuffix
+# apply blindly to all resource names.`;
 
-### CT — explicit control
-
-```ts
-const labels = {
+export const ctLabelsCode = `const labels = {
   "app.kubernetes.io/name": "myapp",
   "app.kubernetes.io/managed-by": "ct",
 };
@@ -182,8 +180,16 @@ deployment({
   name: "myapp-api",
   labels,
   // ...
-});
-```
+});`;
+
+<CodeCompare
+  leftCode={ctLabelsCode}
+  leftLang="ts"
+  leftTitle="CT"
+  rightCode={kustomizeLabelsCode}
+  rightLang="yaml"
+  rightTitle="Kustomize"
+/>
 
 You decide what gets labeled and how. No transformer surprises.
 

@@ -3,6 +3,8 @@ title: CT vs Pulumi
 description: CT generates Kubernetes YAML from TypeScript. Pulumi provisions cloud infrastructure with real code. Different layers, different goals.
 ---
 
+import CodeCompare from "../../../components/CodeCompare.astro";
+
 ## At a glance
 
 | Feature | CT | Pulumi |
@@ -37,10 +39,7 @@ Pulumi can also manage Kubernetes resources via its `@pulumi/kubernetes` provide
 
 ## Kubernetes resources: CT vs Pulumi
 
-### Pulumi — imperative provisioning
-
-```ts
-import * as k8s from "@pulumi/kubernetes";
+export const pulumiK8sCode = `import * as k8s from "@pulumi/kubernetes";
 
 const app = new k8s.apps.v1.Deployment("api", {
   metadata: { namespace: "production" },
@@ -66,15 +65,10 @@ const svc = new k8s.core.v1.Service("api", {
     selector: { app: "api" },
     ports: [{ port: 80, targetPort: 8080 }],
   },
-});
-```
+});`;
 
-This runs `pulumi up`, connects to the Kubernetes API, creates/updates resources, and stores state.
-
-### CT — declarative generation
-
-```ts
-import { deployment, service } from "github.com/cloudticon/k8s@master";
+export const ctK8sCode = `import { deployment, service }
+  from "github.com/cloudticon/k8s@master";
 
 deployment({
   name: "api",
@@ -87,10 +81,19 @@ service({
   name: "api",
   port: 80,
   targetPort: 8080,
-});
-```
+});`;
 
-This runs `ct template`, outputs YAML, and you apply it however you want — `kubectl`, ArgoCD, Flux.
+<CodeCompare
+  leftCode={ctK8sCode}
+  leftLang="ts"
+  leftTitle="CT — declarative generation"
+  rightCode={pulumiK8sCode}
+  rightLang="ts"
+  rightTitle="Pulumi — imperative provisioning"
+  rightCollapsible
+/>
+
+Pulumi runs `pulumi up`, connects to the Kubernetes API, creates/updates resources, and stores state. CT runs `ct template`, outputs YAML, and you apply it however you want — `kubectl`, ArgoCD, Flux.
 
 ## State management
 
@@ -109,32 +112,40 @@ CT is **stateless**. It generates YAML. Nothing to lock, nothing to corrupt, not
 
 ## Composition
 
-### Pulumi — ComponentResource
-
-```ts
-class MyApp extends pulumi.ComponentResource {
-  constructor(name: string, opts?: pulumi.ComponentResourceOptions) {
+export const pulumiComposeCode = `class MyApp extends pulumi.ComponentResource {
+  constructor(
+    name: string,
+    opts?: pulumi.ComponentResourceOptions,
+  ) {
     super("myorg:MyApp", name, {}, opts);
     // create child resources
   }
-}
-```
+}`;
 
-Pulumi uses its own resource model with parent/child relationships, outputs, and cross-stack references.
+export const ctComposeCode = `import { deployment, service }
+  from "github.com/cloudticon/k8s@master";
 
-### CT — functions and imports
-
-```ts
-import { deployment, service } from "github.com/cloudticon/k8s@master";
-
-function createApp(name: string, image: string, port: number) {
-  deployment({ name, image, port, replicas: Values.replicas });
+function createApp(
+  name: string, image: string, port: number,
+) {
+  deployment({
+    name, image, port,
+    replicas: Values.replicas,
+  });
   service({ name, port: 80, targetPort: port });
 }
 
 createApp("api", Values.apiImage, 8080);
-createApp("worker", Values.workerImage, 9090);
-```
+createApp("worker", Values.workerImage, 9090);`;
+
+<CodeCompare
+  leftCode={ctComposeCode}
+  leftLang="ts"
+  leftTitle="CT — functions and imports"
+  rightCode={pulumiComposeCode}
+  rightLang="ts"
+  rightTitle="Pulumi — ComponentResource"
+/>
 
 Plain functions. No resource model to learn. Import from any Git URL.
 

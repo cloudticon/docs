@@ -3,13 +3,13 @@ title: Cloudticon
 description: TypeScript-first Kubernetes tooling. Build fast with CT CLI, CT VS Code, and K8s resource factories.
 template: splash
 hero:
-  tagline: TypeScript-first Kubernetes tooling — from CLI to cluster.
+  tagline: TypeScript-first Kubernetes ecosystem.
   actions:
     - text: Get Started
       link: /home/install/
       icon: right-arrow
       variant: primary
-    - text: Documentation
+    - text: Docs
       link: /ct/cli-reference/
       variant: minimal
     - text: VS Code
@@ -44,43 +44,43 @@ const labels = {
 };
 
 deployment({
-name: app,
-labels,
-image: "ghcr.io/acme/api:2.1.0",
-replicas: 3,
-resources: {
-requests: { cpu: "100m", memory: "128Mi" },
-limits: { cpu: "500m", memory: "512Mi" },
-},
+  name: app,
+  labels,
+  image: "ghcr.io/acme/api:2.1.0",
+  replicas: 3,
+  resources: {
+    requests: { cpu: "100m", memory: "128Mi" },
+    limits: { cpu: "500m", memory: "512Mi" },
+  }
 });
 
 service({
-name: app,
-labels,
-selector: labels,
-ports: [
-{ name: "http", port: 80, targetPort: 8080 },
-{ name: "metrics", port: 9090, targetPort: 9090 },
-],
+  name: app,
+  labels,
+  selector: labels,
+  ports: [
+    { name: "http", port: 80, targetPort: 8080 },
+    { name: "metrics", port: 9090, targetPort: 9090 },
+  ]
 });
 
 ingress({
-name: app,
-labels,
-rules: [
-{
-host: "api.acme.com",
-http: {
-paths: [
-{
-path: "/",
-pathType: "Prefix",
-backend: { service: app, port: 80 },
-},
-],
-},
-},
-],
+  name: app,
+  labels,
+  rules: [
+    {
+      host: "api.acme.com",
+        http: {
+        paths: [
+          {
+          path: "/",
+          pathType: "Prefix",
+          backend: { service: app, port: 80 },
+          },
+        ],
+      },
+    },
+  ]
 });`;
 
 export const yamlCode = `apiVersion: apps/v1
@@ -170,23 +170,140 @@ spec:
 
 **50 lines vs 80 lines** — labels repeated 5×, indentation 8 levels deep, and that's just one microservice. Now imagine scaling that.
 
-### Scale with factories
 
-Wrap the pattern into a shared package — every team gets identical infra in **one call**:
+## Build your own factory in minutes
+
+You don't have to use built-in primitives only — create a custom resource factory, push it to GitHub, and every team can import it instantly with a single URL.
+
+**1. Define the factory** — a plain TypeScript function that calls lower-level primitives:
 
 ```ts
-import { createWebStack } from "github.com/acme/k8s-platform@v1/web-stack";
+// github.com/acme/k8s-platform/web-stack.ct
+import { deployment, service, ingress } from "github.com/cloudticon/k8s@master";
 
-createWebStack({ name: "api", image: "ghcr.io/acme/api:2.1.0", replicas: 3 });
-createWebStack({ name: "auth", image: "ghcr.io/acme/auth:1.0.0" });
-createWebStack({
-  name: "billing",
-  image: "ghcr.io/acme/billing:3.2.1",
-  replicas: 5,
+interface WebStackOptions {
+  name: string;
+  image: string;
+  replicas?: number;
+  host?: string;
+}
+
+export function webApp(opts: WebStackOptions) {
+  const labels = {
+    "app.kubernetes.io/name": opts.name,
+    "app.kubernetes.io/managed-by": "ct",
+  };
+
+  deployment({
+    name: opts.name,
+    labels,
+    image: opts.image,
+    replicas: opts.replicas ?? 1,
+    resources: {
+      requests: { cpu: "100m", memory: "128Mi" },
+      limits: { cpu: "500m", memory: "512Mi" },
+    },
+  });
+
+  service({
+    name: opts.name,
+    labels,
+    selector: labels,
+    ports: [{ name: "http", port: 80, targetPort: 8080 }],
+  });
+
+  if (opts.host) {
+    ingress({
+      name: opts.name,
+      labels,
+      rules: [{ host: opts.host, http: { paths: [{ path: "/", pathType: "Prefix", backend: { service: opts.name, port: 80 } }] } }],
+    });
+  }
+}
+```
+
+**2. Push to GitHub** — that's it. No registry, no publish step.
+
+**3. Import anywhere** — any `.ct` file in any repo can pull your factory by URL:
+
+```ts
+import { webApp } from "github.com/acme/k8s-platform@v1/web-stack";
+
+webApp({ 
+  name: "api",
+  image: "ghcr.io/acme/api:2.1.0",
+  replicas: 3,
+  host: "api.acme.com"
 });
 ```
 
-Three apps, three lines — each gets a Deployment + Service + Ingress with consistent labels, resource limits, and naming. No copy-paste drift, no forgotten fields.
+CT fetches and caches the module at `ct template` time — no `npm install`, no pre-build. Version-pin with a tag (`@v1`), a branch (`@main`), or a commit SHA for full reproducibility.
+
+---
+
+### Real programming language, real power
+
+`.ct` files are TypeScript — so you get `if`, `for`, `map`, spread, destructuring, and every other language feature out of the box. No custom DSL, no `{{- if }}` hacks.
+
+**values.json**
+```json
+{
+  "domain": "acme.com",
+  "apps": [
+    { "name": "api",     "image": "ghcr.io/acme/api:2.1.0",    "replicas": 3, "public": true },
+    { "name": "auth",    "image": "ghcr.io/acme/auth:1.0.0",    "replicas": 1, "public": false },
+    { "name": "billing", "image": "ghcr.io/acme/billing:3.2.1", "replicas": 5, "public": true }
+  ]
+}
+```
+
+**app.ct**
+```ts
+import { deployment, service, ingress } from "github.com/cloudticon/k8s@master";
+
+function labels(app: string) {
+  return { "app.kubernetes.io/name": app, "app.kubernetes.io/managed-by": "ct" };
+}
+
+for (const app of Values.apps) {
+  deployment({
+    name: app.name,
+    labels: labels(app.name),
+    image: app.image,
+    replicas: app.replicas,
+  });
+
+  service({
+    name: app.name,
+    labels: labels(app.name),
+    selector: labels(app.name),
+    ports: [{ name: "http", port: 80, targetPort: 8080 }],
+  });
+
+  if (app.public) {
+    ingress({
+      name: app.name,
+      labels: labels(app.name),
+      rules: [
+        { 
+          host: `${app.name}.${Values.domain}`,
+          http: { 
+            paths: [
+              { 
+                path: "/",
+                pathType: "Prefix",
+                backend: { service: app.name, port: 80 } 
+              }
+            ] 
+          }
+        }
+      ]
+    });
+  }
+}
+```
+
+Values come from `values.json` (or `values.yaml`) and are fully typed via `ct types .`. Loop over a list, conditionally create an Ingress, extract a helper function — all in plain TypeScript. No copy-paste drift, no forgotten fields, and the compiler catches every typo.
 
 ---
 
