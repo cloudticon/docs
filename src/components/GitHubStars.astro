@@ -1,0 +1,58 @@
+---
+interface Props {
+  repo: string;
+}
+
+const { repo } = Astro.props;
+
+let stars: number | null = null;
+try {
+  const res = await fetch(`https://api.github.com/repos/${repo}`, {
+    headers: { Accept: "application/vnd.github.v3+json" },
+  });
+  if (res.ok) {
+    const data = await res.json();
+    stars = data.stargazers_count;
+  }
+} catch {}
+
+const formatted =
+  stars !== null
+    ? stars >= 1000
+      ? `${(stars / 1000).toFixed(1).replace(/\.0$/, "")}k`
+      : String(stars)
+    : null;
+---
+
+{formatted !== null && <script define:vars={{ formatted }}>
+  document.addEventListener('DOMContentLoaded', () => {
+    const link = document.querySelector('.hero a[href*="github.com"]');
+    if (!link) return;
+
+    const svg = link.querySelector('svg');
+    const badge = document.createElement('span');
+    badge.className = 'gh-star-badge';
+    badge.textContent = `★ ${formatted}`;
+
+    if (svg) {
+      link.insertBefore(badge, svg);
+    } else {
+      link.appendChild(badge);
+    }
+  });
+</script>}
+
+<style is:global>
+  .gh-star-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0.35rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 1rem;
+    background: hsla(45, 80%, 55%, 0.15);
+    color: #e3b341;
+    font-size: 0.8em;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+</style>

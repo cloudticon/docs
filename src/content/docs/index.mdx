@@ -9,23 +9,27 @@ hero:
       link: /home/install/
       icon: right-arrow
       variant: primary
-    - text: CLI Reference
+    - text: Documentation
       link: /ct/cli-reference/
       variant: minimal
     - text: Star on GitHub
-      link: https://github.com/cloudticon
+      link: https://github.com/cloudticon/ct/cmd-init/
       icon: github
       variant: secondary
 ---
+
+import GitHubStars from "../../components/GitHubStars.astro";
+import BetaBadge from "../../components/BetaBadge.astro";
+import CodeCompare from "../../components/CodeCompare.astro";
+
+<BetaBadge />
+<GitHubStars repo="cloudticon/ct" />
 
 ## Write TypeScript, not YAML
 
 Readable, type-safe resource definitions with IDE autocomplete — no boilerplate, no templating hacks.
 
-### What you write
-
-```ts
-import { deployment, service, ingress } from "github.com/cloudticon/k8s@master";
+export const ctCode = `import { deployment, service, ingress } from "github.com/cloudticon/k8s@master";
 
 const app = "api";
 
@@ -42,7 +46,7 @@ deployment({
   replicas: 3,
   resources: {
     requests: { cpu: "100m", memory: "128Mi" },
-    limits:   { cpu: "500m", memory: "512Mi" },
+    limits: { cpu: "500m", memory: "512Mi" },
   },
 });
 
@@ -51,7 +55,7 @@ service({
   labels,
   selector: labels,
   ports: [
-    { name: "http",    port: 80,   targetPort: 8080 },
+    { name: "http", port: 80, targetPort: 8080 },
     { name: "metrics", port: 9090, targetPort: 9090 },
   ],
 });
@@ -73,13 +77,9 @@ ingress({
       },
     },
   ],
-});
-```
+});`;
 
-### What Kubernetes gets
-
-```yaml
-apiVersion: apps/v1
+export const yamlCode = `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
@@ -152,10 +152,19 @@ spec:
               service:
                 name: api
                 port:
-                  number: 80
-```
+                  number: 80`;
 
-Labels repeated 5 times, indentation 8 levels deep, 100+ lines — and that's just one microservice. Now imagine scaling that.
+<CodeCompare
+  leftCode={ctCode}
+  leftLang="ts"
+  leftTitle="What you write"
+  rightCode={yamlCode}
+  rightLang="yaml"
+  rightTitle="What Kubernetes gets"
+  rightCollapsible
+/>
+
+**50 lines vs 80 lines** — labels repeated 5×, indentation 8 levels deep, and that's just one microservice. Now imagine scaling that.
 
 ### Scale with factories
 
@@ -164,9 +173,13 @@ Wrap the pattern into a shared package — every team gets identical infra in **
 ```ts
 import { createWebStack } from "github.com/acme/k8s-platform@v1/web-stack";
 
-createWebStack({ name: "api",     image: "ghcr.io/acme/api:2.1.0",     replicas: 3 });
-createWebStack({ name: "auth",    image: "ghcr.io/acme/auth:1.0.0"                 });
-createWebStack({ name: "billing", image: "ghcr.io/acme/billing:3.2.1", replicas: 5 });
+createWebStack({ name: "api", image: "ghcr.io/acme/api:2.1.0", replicas: 3 });
+createWebStack({ name: "auth", image: "ghcr.io/acme/auth:1.0.0" });
+createWebStack({
+  name: "billing",
+  image: "ghcr.io/acme/billing:3.2.1",
+  replicas: 5,
+});
 ```
 
 Three apps, three lines — each gets a Deployment + Service + Ingress with consistent labels, resource limits, and naming. No copy-paste drift, no forgotten fields.
@@ -187,7 +200,7 @@ deployment({
   name: "api",
   image: "ghcr.io/acme/api:2.1.0",
   replicas: "3",
-//          ~~~ Type 'string' is not assignable to type 'number'
+  //          ~~~ Type 'string' is not assignable to type 'number'
 });
 ```
 

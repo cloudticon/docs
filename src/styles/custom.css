@@ -209,6 +209,15 @@ nav.sidebar .top-level > li + li {
   background: var(--sl-color-gray-7, transparent);
 }
 
+/* Hide header on splash/hero page and reclaim the space */
+[data-has-hero] .header {
+  display: none;
+}
+
+[data-has-hero] .hero {
+  padding-block-start: 2rem;
+}
+
 /* Smooth link transitions */
 a {
   transition: color 0.15s ease, opacity 0.15s ease;

@@ -1,0 +1,189 @@
+---
+import { Code } from "astro-expressive-code/components";
+
+interface Props {
+  leftCode: string;
+  leftLang: string;
+  leftTitle?: string;
+  rightCode: string;
+  rightLang: string;
+  rightTitle?: string;
+  rightCollapsible?: boolean;
+}
+
+const {
+  leftCode,
+  leftLang,
+  leftTitle,
+  rightCode,
+  rightLang,
+  rightTitle,
+  rightCollapsible = false,
+} = Astro.props;
+---
+
+<div class="code-compare" data-collapsible={rightCollapsible ? "" : undefined}>
+  {leftTitle && <div class="code-compare__label--left">{leftTitle}</div>}
+  {rightTitle && <div class="code-compare__label--right">{rightTitle}</div>}
+
+  <div class="code-compare__code" data-role="left">
+    <Code code={leftCode} lang={leftLang} />
+  </div>
+
+  <div class="code-compare__code" data-role="right">
+    <Code code={rightCode} lang={rightLang} />
+  </div>
+
+  {rightCollapsible && (
+    <button class="code-compare__toggle" aria-expanded="false">
+      Show all <span class="code-compare__arrow">↓</span>
+    </button>
+  )}
+</div>
+
+<script>
+  function initCodeCompare() {
+    document.querySelectorAll<HTMLElement>('.code-compare[data-collapsible]').forEach((root) => {
+      const leftCode = root.querySelector<HTMLElement>('[data-role="left"]');
+      const rightCode = root.querySelector<HTMLElement>('[data-role="right"]');
+      const toggle = root.querySelector<HTMLButtonElement>('.code-compare__toggle');
+      if (!leftCode || !rightCode || !toggle) return;
+
+      const collapse = () => {
+        const h = leftCode.offsetHeight;
+        if (h > 0) {
+          rightCode.style.maxHeight = `${h}px`;
+          rightCode.dataset.collapsed = '';
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.innerHTML = 'Show all <span class="code-compare__arrow">↓</span>';
+        }
+      };
+
+      const expand = () => {
+        rightCode.style.maxHeight = 'none';
+        delete rightCode.dataset.collapsed;
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.innerHTML = 'Collapse <span class="code-compare__arrow">↑</span>';
+      };
+
+      requestAnimationFrame(() => requestAnimationFrame(collapse));
+
+      toggle.addEventListener('click', () => {
+        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+        isExpanded ? collapse() : expand();
+      });
+
+      new ResizeObserver(() => {
+        if (toggle.getAttribute('aria-expanded') === 'false') collapse();
+      }).observe(leftCode);
+    });
+  }
+
+  document.addEventListener('astro:page-load', initCodeCompare);
+  if (document.readyState !== 'loading') initCodeCompare();
+</script>
+
+<style is:global>
+  .code-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "lt  rt"
+      "lc  rc"
+      ".   btn";
+    gap: 0.5rem 1rem;
+    align-items: start;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .code-compare__label--left,
+  .code-compare__label--right {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.6;
+    align-self: end;
+  }
+
+  .code-compare__label--left  { grid-area: lt; }
+  .code-compare__label--right { grid-area: rt; }
+
+  .code-compare .code-compare__code[data-role="left"]  { grid-area: lc; }
+  .code-compare .code-compare__code[data-role="right"] { grid-area: rc; }
+  .code-compare .code-compare__toggle                  { grid-area: btn; }
+
+  .code-compare__code {
+    overflow: hidden;
+    position: relative;
+    transition: max-height 0.35s ease;
+  }
+
+  .code-compare__code .expressive-code {
+    margin: 0;
+  }
+
+  .code-compare__code pre {
+    font-size: 0.75rem !important;
+    line-height: 1.5;
+  }
+
+  .code-compare__code[data-collapsed]::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4rem;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      var(--sl-color-gray-7, hsl(220 13% 18%)) 90%
+    );
+    pointer-events: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+  }
+
+  [data-theme="light"] .code-compare__code[data-collapsed]::after {
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      var(--sl-color-gray-7, hsl(0 0% 96%)) 90%
+    );
+  }
+
+  .code-compare__toggle {
+    justify-self: center;
+    margin-top: 0.25rem;
+    padding: 0.3rem 1rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 2rem;
+    background: transparent;
+    color: var(--sl-color-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease, border-color 0.2s ease;
+  }
+
+  .code-compare__toggle:hover {
+    opacity: 1;
+    border-color: var(--sl-color-text-accent);
+  }
+
+  @media (max-width: 60rem) {
+    .code-compare {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto auto auto;
+      grid-template-areas:
+        "lt"
+        "lc"
+        "rt"
+        "rc"
+        "btn";
+    }
+  }
+</style>
