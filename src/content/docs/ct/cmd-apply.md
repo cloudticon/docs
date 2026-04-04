@@ -25,6 +25,7 @@ ct apply <name> <dir|repo> [flags]
 | Flag | Short | Type | Default | Description |
 | --- | --- | --- | --- | --- |
 | `--namespace` | `-n` | `string` | — | Target namespace for resources |
+| `--create-namespace` | — | `bool` | `false` | Create target namespace if it does not exist |
 | `--values` | `-f` | `string` | *(auto-detect)* | Path to values file (JSON or YAML) |
 | `--output` | `-o` | `string` | *(none)* | Output format: `yaml` or `json` (print applied manifests) |
 | `--set` | — | `stringArray` | — | Override values inline (e.g. `--set replicas=5`) |
@@ -70,6 +71,12 @@ Apply local project with explicit namespace and context:
 
 ```bash
 ct apply my-release . --namespace development --context staging
+```
+
+Apply and create namespace if needed:
+
+```bash
+ct apply my-release . --namespace development --create-namespace
 ```
 
 Override values while applying:
