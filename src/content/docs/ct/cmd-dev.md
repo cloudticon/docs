@@ -23,6 +23,8 @@ ct dev [flags]
 | --- | --- | --- | --- |
 | `--env-file` | `string` | `".env"` | Path to `.env` file (empty string to skip) |
 | `--context` | `string` | *(current)* | Kubeconfig context to use |
+| `--name` | `string` | `"dev"` | Release name used for labels and inventory |
+| `--delete` | `bool` | `false` | Delete resources from the last dev inventory and exit |
 
 ## Examples
 
@@ -50,6 +52,18 @@ Use a specific kubeconfig context:
 ct dev --context staging
 ```
 
+Start named dev session (multiple sessions in one namespace):
+
+```bash
+ct dev --name dev-alice
+```
+
+Cleanup previously deployed dev resources:
+
+```bash
+ct dev --delete --name dev-alice --context staging
+```
+
 ## How it works
 
 ```text
@@ -59,15 +73,30 @@ ct dev
   ├─ Bundle + execute dev.ct → extract config + dev targets
   ├─ Deep merge config.values with values.json
   ├─ Render main.ct with merged values
+  ├─ Inject release labels (managed-by + instance)
   ├─ Resolve dev target selectors from rendered resources
   ├─ Patch workloads (remove probes, override command/env/replicas)
   ├─ Apply manifests to cluster (Server-Side Apply)
+  ├─ Save release inventory
   │
   └─ Start in parallel:
        ├─ Port forwarding (per target, with reconnect)
        ├─ File sync — local → container (tar + exec, fsnotify)
        ├─ Log streaming (colored per target)
        └─ Terminal auto-attach (first target with .terminal)
+```
+
+### Cleanup dev environment
+
+When `--delete` is used, `ct dev` runs cleanup flow only:
+
+```text
+ct dev --delete
+  │
+  ├─ Execute dev.ct to resolve namespace
+  ├─ Load inventory for release (--name, default: dev)
+  ├─ Delete resources from inventory
+  └─ Delete inventory ConfigMap
 ```
 
 ## Dev API reference

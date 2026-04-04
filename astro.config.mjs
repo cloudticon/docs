@@ -32,6 +32,7 @@ export default defineConfig({
             { label: "ct init", slug: "ct/cmd-init" },
             { label: "ct template", slug: "ct/cmd-template" },
             { label: "ct apply", slug: "ct/cmd-apply" },
+            { label: "ct delete", slug: "ct/cmd-delete" },
             { label: "ct dev", slug: "ct/cmd-dev" },
             { label: "ct types", slug: "ct/cmd-types" },
           ],

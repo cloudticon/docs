@@ -32,8 +32,9 @@ ct [global flags] <command> [args]
 
 Commands:
   init        Create a new CT project scaffold
-  template    Render manifests from .ct entrypoint + values
-  apply       Render and apply manifests to a Kubernetes cluster
+  template    Render manifests from .ct entrypoint + release name
+  apply       Render and apply manifests for a release
+  delete      Delete a release from cluster using inventory
   dev         Run live development workflows on cluster workloads
   types       Generate IDE types (.d.ts) for Values and runtime globals
   version     Print CLI version information
@@ -43,8 +44,9 @@ Commands:
 | Command | Description | Page |
 | --- | --- | --- |
 | [`ct init`](/ct/cmd-init/) | Create a new CT project scaffold | [→](/ct/cmd-init/) |
-| [`ct template`](/ct/cmd-template/) | Render manifests from `.ct` entrypoint + values | [→](/ct/cmd-template/) |
+| [`ct template`](/ct/cmd-template/) | Render manifests from `.ct` entrypoint + release name | [→](/ct/cmd-template/) |
 | [`ct apply`](/ct/cmd-apply/) | Render and apply manifests to a Kubernetes cluster | [→](/ct/cmd-apply/) |
+| [`ct delete`](/ct/cmd-delete/) | Delete release resources tracked by inventory | [→](/ct/cmd-delete/) |
 | [`ct dev`](/ct/cmd-dev/) | Run live development workflows on cluster workloads | [→](/ct/cmd-dev/) |
 | [`ct types`](/ct/cmd-types/) | Generate IDE types (`.d.ts`) for Values and runtime globals | [→](/ct/cmd-types/) |
 
@@ -80,21 +82,21 @@ ct template --help
 
 ```bash
 ct init
-ct template . --namespace production
+ct template my-app . --namespace production
 ```
 
 ### Scenario B: Multi-environment rendering
 
 ```bash
-ct template . --values values-dev.yaml --namespace dev
-ct template . --values values-staging.yaml --namespace staging
-ct template . --values values-prod.yaml --namespace prod
+ct template my-app . --values values-dev.yaml --namespace dev
+ct template my-app . --values values-staging.yaml --namespace staging
+ct template my-app . --values values-prod.yaml --namespace prod
 ```
 
 ### Scenario C: GitOps (ArgoCD style)
 
 ```bash
-ct template . --values values-prod.yaml --namespace prod > apps/my-app/manifests.yaml
+ct template my-app . --values values-prod.yaml --namespace prod > apps/my-app/manifests.yaml
 git add apps/my-app/manifests.yaml
 git commit -m "update prod manifests"
 ```
@@ -102,24 +104,40 @@ git commit -m "update prod manifests"
 ### Scenario D: Apply directly to cluster
 
 ```bash
-ct apply . --namespace development --context dev
-ct apply . --namespace production --context prod --values values-prod.yaml
+ct apply my-app . --namespace development --context dev
+ct apply my-app . --namespace production --context prod --values values-prod.yaml
 ```
 
-### Scenario E: IDE-first workflow
+### Scenario E: Deploy from GitHub source
+
+```bash
+ct template my-app github.com/cloudticon/my-app@v1.0 --namespace staging
+ct apply my-app github.com/cloudticon/my-app@v1.0 --namespace staging
+ct apply my-app github.com/cloudticon/my-app@main --namespace staging --no-cache
+```
+
+### Scenario F: Deploy and teardown
+
+```bash
+ct apply my-app . --namespace production --context prod
+ct delete my-app --namespace production --context prod
+```
+
+### Scenario G: IDE-first workflow
 
 ```bash
 ct types .
 ct types . --dev
-ct template . --namespace production
+ct template my-app . --namespace production
 ```
 
 Regenerate types whenever `.ct` files or values change.
 
-### Scenario F: Dev loop
+### Scenario H: Dev loop with cleanup
 
 ```bash
-ct dev --context staging --env-file .env.staging
+ct dev --context staging --env-file .env.staging --name dev-alice
+ct dev --delete --context staging --name dev-alice
 ```
 
 ## Troubleshooting
@@ -135,6 +153,7 @@ ct dev --context staging --env-file .env.staging
 - Check repository URL and branch/tag in import string.
 - Verify network and git access.
 - Clear CT cache (`~/.ct/cache/`) if stale packages are present.
+- Use `--no-cache` on `ct template`/`ct apply` to force re-download.
 
 ### Values file is not applied
 
@@ -152,6 +171,7 @@ CT runtime is synchronous (Goja engine). An esbuild plugin rejects `async`/`awai
 - Keep one baseline values file plus thin env overlays.
 - Version-control all rendered outputs used by GitOps.
 - Avoid hidden defaults; prefer explicit values.
+- Use stable release names so inventory and pruning stay predictable.
 
 ## Best practices
 

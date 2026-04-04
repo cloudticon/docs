@@ -325,12 +325,6 @@ deployment({
 });
 ```
 
-Generate types once, iterate with confidence:
-
-```bash
-ct types .
-```
-
 The extension watches `.ct` and values files — types refresh automatically on save. See [CT VS Code](/ct-vscode/overview/) for setup details.
 
 ---
@@ -341,17 +335,18 @@ The extension watches `.ct` and values files — types refresh automatically on 
 curl -fsSL https://cloudticon.com/install.sh | sudo sh
 ct init my-app
 cd my-app
-ct template --values values.yaml
+ct template my-app-dev . --namespace default
 ```
 
 1. Install CT.
 2. Initialize a project.
-3. Render resources.
+3. Render resources with a release name.
 4. Iterate in VS Code with IntelliSense and `ct types`.
 
 ## Documentation map
 
 - **[CT CLI](/ct/cli-reference/)** — full command and flag reference, workflows, troubleshooting.
+- **[ct delete](/ct/cmd-delete/)** — remove a release from cluster using inventory (no source path required).
 - **[CT vs Helm](/ct/ct-vs-helm/)** — why TypeScript beats Go templates.
 - **[CT Dev](/ct/ct-dev/)** — development mode for Kubernetes — port forwarding, file sync, logs.
 - **[CT VS Code](/ct-vscode/overview/)** — extension setup, type generation, diagnostics.
