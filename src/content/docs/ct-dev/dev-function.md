@@ -98,6 +98,7 @@ ports?: (number | [number, number])[]
 ```
 
 Port forwarding rules. Each entry is either:
+
 - A single `number` — same port for both local and remote (e.g. `9229` → `localhost:9229 → container:9229`).
 - A tuple `[local, remote]` — different local and remote ports.
 
