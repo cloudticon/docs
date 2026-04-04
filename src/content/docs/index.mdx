@@ -241,6 +241,38 @@ CT fetches and caches the module at `ct template` time — no `npm install`, no 
 
 ---
 
+## High-level library: k8s-factories
+
+Want less boilerplate for common single-container workloads? Use `k8s-factories` and start from `webApp()` plus optional `expose()` routing.
+
+```ts
+import { webApp, env, vol } from "github.com/cloudticon/k8s@master";
+
+webApp({
+  name: "api",
+  image: "ghcr.io/acme/api:2.1.0",
+  port: 8080,
+  env: {
+    NODE_ENV: "production",
+    DB_PASSWORD: env.secret("db-credentials", "password"),
+  },
+  volumes: {
+    "/data": vol.pvc({ size: "10Gi" }),
+    "/cache": vol.emptyDir(),
+  },
+  probes: { path: "/health" },
+  hpa: { min: 2, max: 8, cpu: 75 },
+  expose: {
+    type: "istio",
+    host: "api.acme.com",
+  },
+});
+```
+
+This single call creates `Deployment` + `Service`, and can also add HPA, PVC-backed volumes, and inline exposure. For more patterns, see [Examples](/k8s/examples/).
+
+---
+
 ### Real programming language, real power
 
 `.ct` files are TypeScript — so you get `if`, `for`, `map`, spread, destructuring, and every other language feature out of the box. No custom DSL, no `{{- if }}` hacks.
@@ -351,4 +383,5 @@ ct template my-app-dev . --namespace default
 - **[CT Dev](/ct/ct-dev/)** — development mode for Kubernetes — port forwarding, file sync, logs.
 - **[CT VS Code](/ct-vscode/overview/)** — extension setup, type generation, diagnostics.
 - **[K8s Resource Factories](/k8s/base-primitive/)** — reusable `resource()` based APIs.
+- **[K8s High-level Factories](/k8s/examples/)** — `webApp()` and `expose()` patterns from `k8s-factories`.
 - **[CT Operator](/ct-operator/plan/)** — runtime and deployment model.

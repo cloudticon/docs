@@ -48,6 +48,16 @@ export default defineConfig({
           ],
         },
         {
+          label: "Patterns",
+          items: [
+            { label: "Factories", slug: "patterns/high-level-factories" },
+            { label: "Custom factoris", slug: "patterns/factory-helpers" },
+            { label: "Base Primitive", slug: "patterns/base-primitive" },
+            { label: "Shared Factories", slug: "patterns/shared-factories" },
+            { label: "Examples", slug: "patterns/examples" },
+          ],
+        },
+        {
           label: "Visual Studio Code",
           items: [{ label: "Overview", slug: "ct-vscode/overview" }],
         },
@@ -60,15 +70,7 @@ export default defineConfig({
             { label: "CT vs Pulumi", slug: "comparisons/ct-vs-pulumi" },
           ],
         },
-        {
-          label: "Kubernetes",
-          items: [
-            { label: "Base Primitive", slug: "k8s/base-primitive" },
-            { label: "Factory Helpers", slug: "k8s/factory-helpers" },
-            { label: "Shared Factories", slug: "k8s/shared-factories" },
-            { label: "Examples", slug: "k8s/examples" },
-          ],
-        },
+        
         {
           label: "CT Operator",
           items: [{ label: "Plan", slug: "ct-operator/plan" }],
