@@ -1,0 +1,165 @@
+---
+title: CT vs Pulumi
+description: CT generates Kubernetes YAML from TypeScript. Pulumi provisions cloud infrastructure with real code. Different layers, different goals.
+---
+
+## At a glance
+
+| Feature | CT | Pulumi |
+| --- | --- | --- |
+| Scope | Kubernetes manifests only | Any cloud resource (AWS, GCP, Azure, K8s, …) |
+| Language | TypeScript (Goja runtime) | TypeScript, Python, Go, C#, Java, YAML |
+| Output | Static YAML / JSON | Imperative API calls (real provisioning) |
+| State | Stateless — output is YAML, no state file | Stateful — state stored in Pulumi Cloud / S3 / local |
+| Apply model | `ct template` → YAML → kubectl / ArgoCD | `pulumi up` — provisions directly |
+| IDE support | Full IntelliSense via generated `.d.ts` | Full IntelliSense (native TypeScript SDK) |
+| Drift detection | GitOps tool responsibility (ArgoCD, Flux) | Built-in (`pulumi refresh`) |
+| Learning curve | Know TypeScript + K8s YAML? You're done. | TypeScript + Pulumi resource model + provider SDKs |
+| Packaging | Git URL imports | npm / PyPI / NuGet packages |
+
+## Different layers
+
+This is the key distinction: **CT and Pulumi solve different problems**.
+
+```text
+┌─────────────────────────────────┐
+│  Cloud Infrastructure           │  ← Pulumi / Terraform
+│  (VPCs, databases, DNS, IAM)    │
+├─────────────────────────────────┤
+│  Kubernetes Manifests           │  ← CT
+│  (Deployments, Services, CRDs)  │
+├─────────────────────────────────┤
+│  GitOps / Apply                 │  ← ArgoCD, Flux, kubectl
+└─────────────────────────────────┘
+```
+
+Pulumi can also manage Kubernetes resources via its `@pulumi/kubernetes` provider, but it does so **imperatively** — it calls the Kubernetes API directly and tracks state. CT generates **declarative YAML** that feeds into your existing GitOps pipeline.
+
+## Kubernetes resources: CT vs Pulumi
+
+### Pulumi — imperative provisioning
+
+```ts
+import * as k8s from "@pulumi/kubernetes";
+
+const app = new k8s.apps.v1.Deployment("api", {
+  metadata: { namespace: "production" },
+  spec: {
+    replicas: 3,
+    selector: { matchLabels: { app: "api" } },
+    template: {
+      metadata: { labels: { app: "api" } },
+      spec: {
+        containers: [{
+          name: "api",
+          image: "myapp:1.0",
+          ports: [{ containerPort: 8080 }],
+        }],
+      },
+    },
+  },
+});
+
+const svc = new k8s.core.v1.Service("api", {
+  metadata: { namespace: "production" },
+  spec: {
+    selector: { app: "api" },
+    ports: [{ port: 80, targetPort: 8080 }],
+  },
+});
+```
+
+This runs `pulumi up`, connects to the Kubernetes API, creates/updates resources, and stores state.
+
+### CT — declarative generation
+
+```ts
+import { deployment, service } from "github.com/cloudticon/k8s@master";
+
+deployment({
+  name: "api",
+  replicas: Values.replicas,
+  image: Values.image,
+  port: 8080,
+});
+
+service({
+  name: "api",
+  port: 80,
+  targetPort: 8080,
+});
+```
+
+This runs `ct template`, outputs YAML, and you apply it however you want — `kubectl`, ArgoCD, Flux.
+
+## State management
+
+### Pulumi
+
+Pulumi maintains a **state file** that tracks every resource it manages. This enables drift detection, dependency graphs, and safe destruction. But it also means:
+
+- You need a state backend (Pulumi Cloud, S3, local file).
+- Concurrent deploys require locking.
+- Importing existing resources requires `pulumi import`.
+- Deleting the state loses track of managed resources.
+
+### CT
+
+CT is **stateless**. It generates YAML. Nothing to lock, nothing to corrupt, nothing to import. Your GitOps tool handles the state of what's deployed.
+
+## Composition
+
+### Pulumi — ComponentResource
+
+```ts
+class MyApp extends pulumi.ComponentResource {
+  constructor(name: string, opts?: pulumi.ComponentResourceOptions) {
+    super("myorg:MyApp", name, {}, opts);
+    // create child resources
+  }
+}
+```
+
+Pulumi uses its own resource model with parent/child relationships, outputs, and cross-stack references.
+
+### CT — functions and imports
+
+```ts
+import { deployment, service } from "github.com/cloudticon/k8s@master";
+
+function createApp(name: string, image: string, port: number) {
+  deployment({ name, image, port, replicas: Values.replicas });
+  service({ name, port: 80, targetPort: port });
+}
+
+createApp("api", Values.apiImage, 8080);
+createApp("worker", Values.workerImage, 9090);
+```
+
+Plain functions. No resource model to learn. Import from any Git URL.
+
+## When Pulumi makes more sense
+
+- You need to provision **cloud infrastructure** (VPCs, RDS, CloudFront, IAM) — CT doesn't do this.
+- You want **one tool** for both infrastructure and Kubernetes resources.
+- You need built-in **drift detection** and **destroy** capabilities.
+- You manage **multi-cloud** deployments beyond Kubernetes.
+
+## When CT makes more sense
+
+- You only need **Kubernetes manifests** and already have a GitOps pipeline.
+- You want **stateless** generation — no state file, no backend, no locking.
+- You want **simple** TypeScript without Pulumi's resource model, outputs, and async patterns.
+- You want generated YAML you can review in a PR before it reaches the cluster.
+
+## Using them together
+
+CT and Pulumi complement each other well:
+
+```text
+Pulumi → provisions infrastructure (VPC, RDS, EKS cluster)
+CT     → generates Kubernetes manifests for apps running on that cluster
+ArgoCD → syncs CT-generated manifests to the cluster
+```
+
+Pulumi manages the cluster, CT manages what runs on it.

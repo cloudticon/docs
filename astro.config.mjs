@@ -1,6 +1,6 @@
-import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import tailwind from "@astrojs/tailwind";
+import { defineConfig } from "astro/config";
 
 export default defineConfig({
   site: "https://cloudticon.com",
@@ -22,14 +22,34 @@ export default defineConfig({
         {
           label: "CT CLI",
           items: [
-            { label: "CLI Reference", slug: "ct/cli-reference" },
-            { label: "CT vs Helm", slug: "ct/ct-vs-helm" },
-            { label: "CT Dev", slug: "ct/ct-dev" },
+            { label: "ct init", slug: "ct/cmd-init" },
+            { label: "ct template", slug: "ct/cmd-template" },
+            { label: "ct apply", slug: "ct/cmd-apply" },
+            { label: "ct dev", slug: "ct/cmd-dev" },
+            { label: "ct types", slug: "ct/cmd-types" },
           ],
         },
         {
-          label: "CT VS Code",
+          label: "CT Dev",
+          items: [
+            { label: "Overview", slug: "ct-dev/overview" },
+            { label: "dev()", slug: "ct-dev/dev-function" },
+            { label: "config()", slug: "ct-dev/config-function" },
+            { label: "env() & prompt()", slug: "ct-dev/helpers" },
+          ],
+        },
+        {
+          label: "Visual Studio Code",
           items: [{ label: "Overview", slug: "ct-vscode/overview" }],
+        },
+        {
+          label: "Comparisons",
+          items: [
+            { label: "CT vs Helm", slug: "comparisons/ct-vs-helm" },
+            { label: "CT vs Kustomize", slug: "comparisons/ct-vs-kustomize" },
+            { label: "CT vs Terraform", slug: "comparisons/ct-vs-terraform" },
+            { label: "CT vs Pulumi", slug: "comparisons/ct-vs-pulumi" },
+          ],
         },
         {
           label: "Kubernetes",
@@ -52,6 +72,12 @@ export default defineConfig({
               slug: "manifesto/k8s-typescript-ecosystem",
             },
           ],
+        },
+      ],
+      head: [
+        {
+          tag: "script",
+          content: `if(!localStorage.getItem('starlight-theme')){localStorage.setItem('starlight-theme','dark');document.documentElement.dataset.theme='dark';}`,
         },
       ],
       customCss: ["./src/styles/custom.css"],

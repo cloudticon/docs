@@ -87,3 +87,13 @@ Run with `--operator`:
 ```bash
 ct types . --operator
 ```
+
+## Dev mode typings
+
+When the extension detects a `dev.ct` file it runs `ct types --dev` to generate `dev.d.ts` with:
+
+- **`CtResource`** — union type of all workload names from `main.ct` (autocomplete for `dev()` first argument).
+- **`CtEnvKey`** — union type of all keys from `.env` file (autocomplete for `env()`).
+- Full type definitions for `config()`, `dev()`, `prompt()`, `env()`.
+
+See the [CT Dev documentation](/ct-dev/overview/) for details on the dev runtime API.
