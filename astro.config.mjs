@@ -17,7 +17,14 @@ export default defineConfig({
       sidebar: [
         {
           label: "Getting Started",
-          items: [{ label: "Install", slug: "home/install" }],
+          items: [
+            { label: "Install", slug: "home/install" },
+            {
+              label: "Downloads",
+              link: "https://github.com/cloudticon/ct/releases",
+              attrs: { target: "_blank" },
+            },
+          ],
         },
         {
           label: "CT CLI",
