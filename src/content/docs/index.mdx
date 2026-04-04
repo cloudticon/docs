@@ -12,6 +12,10 @@ hero:
     - text: Documentation
       link: /ct/cli-reference/
       variant: minimal
+    - text: VS Code
+      link: "https://marketplace.visualstudio.com/items?itemName=cloudticon.cloudticon-ct"
+      icon: vscode
+      variant: minimal
     - text: Star on GitHub
       link: https://github.com/cloudticon/ct/cmd-init/
       icon: github
@@ -34,49 +38,49 @@ export const ctCode = `import { deployment, service, ingress } from "github.com/
 const app = "api";
 
 const labels = {
-  "app.kubernetes.io/name": app,
-  "app.kubernetes.io/part-of": "acme-platform",
-  "app.kubernetes.io/managed-by": "ct",
+"app.kubernetes.io/name": app,
+"app.kubernetes.io/part-of": "acme-platform",
+"app.kubernetes.io/managed-by": "ct",
 };
 
 deployment({
-  name: app,
-  labels,
-  image: "ghcr.io/acme/api:2.1.0",
-  replicas: 3,
-  resources: {
-    requests: { cpu: "100m", memory: "128Mi" },
-    limits: { cpu: "500m", memory: "512Mi" },
-  },
+name: app,
+labels,
+image: "ghcr.io/acme/api:2.1.0",
+replicas: 3,
+resources: {
+requests: { cpu: "100m", memory: "128Mi" },
+limits: { cpu: "500m", memory: "512Mi" },
+},
 });
 
 service({
-  name: app,
-  labels,
-  selector: labels,
-  ports: [
-    { name: "http", port: 80, targetPort: 8080 },
-    { name: "metrics", port: 9090, targetPort: 9090 },
-  ],
+name: app,
+labels,
+selector: labels,
+ports: [
+{ name: "http", port: 80, targetPort: 8080 },
+{ name: "metrics", port: 9090, targetPort: 9090 },
+],
 });
 
 ingress({
-  name: app,
-  labels,
-  rules: [
-    {
-      host: "api.acme.com",
-      http: {
-        paths: [
-          {
-            path: "/",
-            pathType: "Prefix",
-            backend: { service: app, port: 80 },
-          },
-        ],
-      },
-    },
-  ],
+name: app,
+labels,
+rules: [
+{
+host: "api.acme.com",
+http: {
+paths: [
+{
+path: "/",
+pathType: "Prefix",
+backend: { service: app, port: 80 },
+},
+],
+},
+},
+],
 });`;
 
 export const yamlCode = `apiVersion: apps/v1

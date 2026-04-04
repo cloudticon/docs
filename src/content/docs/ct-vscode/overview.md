@@ -5,6 +5,8 @@ description: Install and use CT VS Code for IntelliSense, URL imports, and diagn
 
 ## Install extension
 
+[Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=cloudticon.cloudticon-ct)
+
 1. Open VS Code Extensions.
 2. Search for `Cloudticon CT`.
 3. Install and reload window.
