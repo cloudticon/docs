@@ -77,22 +77,54 @@ my-app/
 Edit `main.ct` — a few lines of TypeScript replace hundreds of YAML:
 
 ```ts
-import { deployment, service } from "github.com/cloudticon/k8s@master";
+import { deployment, service, ingress } from "github.com/cloudticon/k8s@master";
 
-const labels = { "app.kubernetes.io/name": "api" };
+const app = "api";
+
+const labels = {
+  "app.kubernetes.io/name": app,
+  "app.kubernetes.io/part-of": "my-app",
+  "app.kubernetes.io/managed-by": "ct",
+};
 
 deployment({
-  name: "api",
+  name: app,
   labels,
-  image: "ghcr.io/acme/api:latest",
-  replicas: 1,
+  image: "ghcr.io/acme/api:1.4.2",
+  replicas: 3,
+  resources: {
+    requests: { cpu: "100m", memory: "128Mi" },
+    limits:   { cpu: "500m", memory: "512Mi" },
+  },
 });
 
 service({
-  name: "api",
+  name: app,
   labels,
   selector: labels,
-  ports: [{ port: 80, targetPort: 3000 }],
+  ports: [
+    { name: "http",    port: 80,   targetPort: 3000 },
+    { name: "metrics", port: 9090, targetPort: 9090 },
+  ],
+});
+
+ingress({
+  name: app,
+  labels,
+  rules: [
+    {
+      host: "api.example.com",
+      http: {
+        paths: [
+          {
+            path: "/",
+            pathType: "Prefix",
+            backend: { service: app, port: 80 },
+          },
+        ],
+      },
+    },
+  ],
 });
 ```
 
@@ -102,7 +134,92 @@ service({
 ct template . --namespace default
 ```
 
-CT bundles `main.ct`, evaluates it against `values.json`, and prints Kubernetes YAML to stdout. Review the output before touching the cluster.
+CT bundles `main.ct`, evaluates it against `values.json`, and prints Kubernetes YAML to stdout — **~40 lines of CT become ~120 lines of YAML**. Review the output before touching the cluster.
+
+<details>
+<summary><strong>Show generated YAML</strong></summary>
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: default
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: my-app
+    app.kubernetes.io/managed-by: ct
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api
+      app.kubernetes.io/part-of: my-app
+      app.kubernetes.io/managed-by: ct
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api
+        app.kubernetes.io/part-of: my-app
+        app.kubernetes.io/managed-by: ct
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/acme/api:1.4.2
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: default
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: my-app
+    app.kubernetes.io/managed-by: ct
+spec:
+  selector:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: my-app
+    app.kubernetes.io/managed-by: ct
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api
+  namespace: default
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: my-app
+    app.kubernetes.io/managed-by: ct
+spec:
+  rules:
+    - host: api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 80
+```
+
+</details>
 
 ### 4. Start developing on-cluster
 

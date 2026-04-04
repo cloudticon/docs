@@ -14,28 +14,65 @@ hero:
       variant: minimal
 ---
 
-## Write less, deploy more
+## Write TypeScript, not YAML
 
-CT resources are concise TypeScript — a few lines replace hundreds of YAML.
-Full type safety, IDE autocomplete, and zero boilerplate.
+Readable, type-safe resource definitions with IDE autocomplete — no boilerplate, no templating hacks.
 
-### CT — 12 lines
+### What you write
 
 ```ts
 import { deployment, service, ingress } from "github.com/cloudticon/k8s@master";
 
-const labels = { "app.kubernetes.io/name": "api" };
+const app = "api";
 
-deployment({ name: "api", labels, image: "ghcr.io/acme/api:2.1.0", replicas: 3,
-  resources: { requests: { cpu: "100m", memory: "128Mi" }, limits: { cpu: "500m", memory: "512Mi" } },
+const labels = {
+  "app.kubernetes.io/name": app,
+  "app.kubernetes.io/part-of": "acme-platform",
+  "app.kubernetes.io/managed-by": "ct",
+};
+
+deployment({
+  name: app,
+  labels,
+  image: "ghcr.io/acme/api:2.1.0",
+  replicas: 3,
+  resources: {
+    requests: { cpu: "100m", memory: "128Mi" },
+    limits:   { cpu: "500m", memory: "512Mi" },
+  },
 });
 
-service({ name: "api-svc", labels, selector: labels, ports: [{ port: 80, targetPort: 8080 }] });
+service({
+  name: app,
+  labels,
+  selector: labels,
+  ports: [
+    { name: "http",    port: 80,   targetPort: 8080 },
+    { name: "metrics", port: 9090, targetPort: 9090 },
+  ],
+});
 
-ingress({ name: "api-ing", rules: [{ host: "api.acme.com", paths: [{ path: "/", service: "api-svc", port: 80 }] }] });
+ingress({
+  name: app,
+  labels,
+  rules: [
+    {
+      host: "api.acme.com",
+      http: {
+        paths: [
+          {
+            path: "/",
+            pathType: "Prefix",
+            backend: { service: app, port: 80 },
+          },
+        ],
+      },
+    },
+  ],
+});
 ```
 
-### Generated YAML — 80+ lines
+### What Kubernetes gets
 
 ```yaml
 apiVersion: apps/v1
@@ -44,15 +81,21 @@ metadata:
   name: api
   labels:
     app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: acme-platform
+    app.kubernetes.io/managed-by: ct
 spec:
   replicas: 3
   selector:
     matchLabels:
       app.kubernetes.io/name: api
+      app.kubernetes.io/part-of: acme-platform
+      app.kubernetes.io/managed-by: ct
   template:
     metadata:
       labels:
         app.kubernetes.io/name: api
+        app.kubernetes.io/part-of: acme-platform
+        app.kubernetes.io/managed-by: ct
     spec:
       containers:
         - name: api
@@ -68,20 +111,32 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: api-svc
+  name: api
   labels:
     app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: acme-platform
+    app.kubernetes.io/managed-by: ct
 spec:
   selector:
     app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: acme-platform
+    app.kubernetes.io/managed-by: ct
   ports:
-    - port: 80
+    - name: http
+      port: 80
       targetPort: 8080
+    - name: metrics
+      port: 9090
+      targetPort: 9090
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: api-ing
+  name: api
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: acme-platform
+    app.kubernetes.io/managed-by: ct
 spec:
   rules:
     - host: api.acme.com
@@ -91,22 +146,54 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: api-svc
+                name: api
                 port:
                   number: 80
 ```
 
-Now wrap that into a reusable factory — and every service in your org gets the same pattern in **one function call**:
+Labels repeated 5 times, indentation 8 levels deep, 100+ lines — and that's just one microservice. Now imagine scaling that.
+
+### Scale with factories
+
+Wrap the pattern into a shared package — every team gets identical infra in **one call**:
 
 ```ts
-import { createWebStack } from "github.com/my-org/k8s-platform@v1/web-stack";
+import { createWebStack } from "github.com/acme/k8s-platform@v1/web-stack";
 
-createWebStack({ name: "api", image: "ghcr.io/acme/api:2.1.0", replicas: 3 });
-createWebStack({ name: "auth", image: "ghcr.io/acme/auth:1.0.0" });
+createWebStack({ name: "api",     image: "ghcr.io/acme/api:2.1.0",     replicas: 3 });
+createWebStack({ name: "auth",    image: "ghcr.io/acme/auth:1.0.0"                 });
 createWebStack({ name: "billing", image: "ghcr.io/acme/billing:3.2.1", replicas: 5 });
 ```
 
-Three apps — three lines. Each gets a Deployment + Service + Ingress with consistent labels, resource limits, and naming.
+Three apps, three lines — each gets a Deployment + Service + Ingress with consistent labels, resource limits, and naming. No copy-paste drift, no forgotten fields.
+
+---
+
+## Full IntelliSense in VS Code
+
+`.ct` files are TypeScript — so your editor already knows how to help. Install the **CT VS Code** extension and run `ct types .` to unlock:
+
+- **Autocomplete for every field** — type `deployment({` and see `name`, `image`, `replicas`, `resources`, `labels` suggested instantly. No guessing field names, no checking docs mid-flow.
+- **Typed Values** — `Values.replicas`, `Values.image` come straight from your `values.json` or `values.yaml`. Rename a key and the editor flags every broken reference.
+- **URL import resolution** — types from `github.com/cloudticon/k8s@master` are fetched, cached, and visible to TypeScript. Jump-to-definition works across packages.
+- **Errors before you run** — misspell a field, pass a number where a string is expected, forget a required property — red squiggles appear immediately, not after `ct template` fails.
+
+```ts
+deployment({
+  name: "api",
+  image: "ghcr.io/acme/api:2.1.0",
+  replicas: "3",
+//          ~~~ Type 'string' is not assignable to type 'number'
+});
+```
+
+Generate types once, iterate with confidence:
+
+```bash
+ct types .
+```
+
+The extension watches `.ct` and values files — types refresh automatically on save. See [CT VS Code](/ct-vscode/overview/) for setup details.
 
 ---
 
