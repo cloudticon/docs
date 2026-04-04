@@ -12,6 +12,10 @@ hero:
     - text: CLI Reference
       link: /ct/cli-reference/
       variant: minimal
+    - text: Star on GitHub
+      link: https://github.com/cloudticon
+      icon: github
+      variant: secondary
 ---
 
 ## Write TypeScript, not YAML
