@@ -27,10 +27,6 @@ jobs:
 
       - name: Markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v18
-        with:
-          globs: |
-            **/*.md
-            **/*.mdx
 
       - name: Link checker
         uses: lycheeverse/lychee-action@v2
