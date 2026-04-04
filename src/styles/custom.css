@@ -35,7 +35,11 @@
   position: relative;
   isolation: isolate;
   overflow: visible;
-  padding-block: 5rem 3rem;
+  padding-block: 5rem 0.5rem;
+}
+
+.hero .actions {
+  gap: 1rem 0.75rem;
 }
 
 .hero h1 {
@@ -216,6 +220,10 @@ nav.sidebar .top-level > li + li {
 
 [data-has-hero] .hero {
   padding-block-start: 2rem;
+}
+
+[data-has-hero] .sl-markdown-content > h2:first-of-type {
+  margin-top: 1.25rem;
 }
 
 /* Smooth link transitions */
