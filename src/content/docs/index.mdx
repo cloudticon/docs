@@ -227,7 +227,7 @@ export function webApp(opts: WebStackOptions) {
 **3. Import anywhere** — any `.ct` file in any repo can pull your factory by URL:
 
 ```ts
-import { webApp } from "github.com/cloudticon/k8s-factories@master";
+import { webApp } from "github.com/cloudticon/k8s@master";
 
 webApp({ 
   name: "api",
@@ -243,10 +243,10 @@ CT fetches and caches the module at `ct template` time — no `npm install`, no 
 
 ## High-level library: k8s-factories
 
-Want less boilerplate for common single-container workloads? Use `k8s-factories` and start from `webApp()` plus optional `expose()` routing.
+Want less boilerplate for common single-container workloads? Use [k8s-factories](https://github.com/cloudticon/k8s-factories) and start from `webApp()` plus optional `expose()` routing.
 
 ```ts
-import { webApp, env, vol } from "github.com/cloudticon/k8s@master";
+import { webApp, env, vol } from "github.com/cloudticon/k8s-factories@master";
 
 webApp({
   name: "api",
