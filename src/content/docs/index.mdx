@@ -29,6 +29,10 @@ import CodeCompare from "../../components/CodeCompare.astro";
 <BetaBadge />
 <GitHubStars repo="cloudticon/ct" />
 
+```bash
+curl -fsSL https://cloudticon.com/install.sh | sudo sh
+```
+
 ## Write TypeScript, not YAML
 
 Readable, type-safe resource definitions with IDE autocomplete — no boilerplate, no templating hacks.
@@ -170,6 +174,30 @@ spec:
 
 **50 lines vs 80 lines** — labels repeated 5×, indentation 8 levels deep, and that's just one microservice. Now imagine scaling that.
 
+---
+
+## Dev mode in one command
+
+Add a `dev.ct` file next to your resources:
+
+```ts
+// dev.ct
+config({ namespace: "myapp-dev" });
+
+dev("api", {
+  command: ["npm", "run", "dev"],
+  sync: [{ from: "./", to: "/app" }],
+  ports: [[8080, 3000]],
+});
+```
+
+```bash
+ct dev
+```
+
+Port forwarding, file sync, log streaming — all start in parallel. Edit a file locally and it lands in the container instantly. No Docker rebuilds, no separate YAML config. [Full CT Dev docs →](/ct-dev/overview/)
+
+---
 
 ## Build your own factory in minutes
 
