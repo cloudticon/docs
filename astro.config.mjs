@@ -117,6 +117,17 @@ export default defineConfig({
           tag: "script",
           content: `if(!localStorage.getItem('starlight-theme')){localStorage.setItem('starlight-theme','dark');document.documentElement.dataset.theme='dark';}`,
         },
+        {
+          tag: "script",
+          attrs: {
+            async: true,
+            src: "https://www.googletagmanager.com/gtag/js?id=G-3KNX7M7RGK",
+          },
+        },
+        {
+          tag: "script",
+          content: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-3KNX7M7RGK');`,
+        },
       ],
       customCss: ["./src/styles/custom.css"],
       expressiveCode: {
