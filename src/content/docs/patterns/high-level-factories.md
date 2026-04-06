@@ -24,6 +24,55 @@ webApp({
 
 This creates a `Deployment`, a `Service`, and an Istio `VirtualService`.
 
+## Platform factory (`createFactory`)
+
+Use `createFactory()` when you want to centralize platform defaults and expose a ready-to-use `{ webApp, expose }` API for teams.
+
+```ts
+import { createFactory } from "github.com/cloudticon/k8s-factories@master";
+
+export const { webApp, expose } = createFactory({
+  networking: {
+    type: "istio",
+    gateway: "shared-gateway/default",
+    tls: { issuer: "letsencrypt-prod" },
+  },
+  resourcePresets: {
+    small: {
+      requests: { cpu: "50m", memory: "64Mi" },
+      limits: { cpu: "200m", memory: "128Mi" },
+    },
+  },
+  webApp: {
+    defaults: {
+      replicas: 2,
+      probes: "/health",
+      resources: "medium",
+    },
+    transform: (config) => ({
+      ...config,
+      labels: { ...config.labels, "managed-by": "platform-team" },
+    }),
+  },
+});
+```
+
+`webApp()` and `expose()` still work standalone without factory. Factory is an optional layer.
+
+## Resource presets
+
+`webApp.resources` accepts presets in addition to full objects:
+
+```ts
+resources: "small"; // "small" | "medium" | "large"
+```
+
+Built-in defaults:
+
+- `small`: requests `100m/128Mi`, limits `250m/256Mi`
+- `medium`: requests `250m/256Mi`, limits `500m/512Mi`
+- `large`: requests `500m/512Mi`, limits `1000m/1Gi`
+
 ## Production-oriented example
 
 ```ts
@@ -73,10 +122,40 @@ expose({
 });
 ```
 
+## Conditional routes
+
+`routes` accepts falsy items and filters them automatically:
+
+```ts
+const isStaging = Values.env === "staging";
+
+expose({
+  name: "my-app",
+  type: "istio",
+  host: "app.example.com",
+  routes: [
+    { prefix: "/api", destination: api },
+    isStaging && { prefix: "/admin", destination: admin },
+    { prefix: "/", destination: frontend },
+  ],
+});
+```
+
+## TLS and gateway behavior (Istio)
+
+When `tls` is enabled:
+
+- `createCertificate` defaults to `true`
+- `createGateway` defaults to `true`
+- if `gateway` is explicitly provided, helper reuses it and does not create a dedicated gateway by default
+
+This allows platform teams to choose between shared gateway and dedicated gateway behavior per environment.
+
 ## What you get
 
 - `webApp()` for `Deployment` + `Service` with optional probes, HPA, env helpers, and volumes.
-- `expose()` for Istio or Ingress routes with optional TLS configuration.
-- A small, composable API that keeps your templates readable as apps grow.
+- `expose()` for Istio or Ingress routes with optional TLS configuration and conditional routes.
+- `createFactory()` for shared networking defaults, resource presets, and config transforms.
+- A composable API that keeps templates readable as apps grow.
 
-For lower-level reusable patterns, see [Factory Helpers](/patters/factory-helpers/) and [Shared Factories](/patters/shared-factories/).
+For lower-level reusable patterns, see [Factory Helpers](/patterns/factory-helpers/) and [Shared Factories](/patterns/shared-factories/).
