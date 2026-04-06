@@ -17,20 +17,20 @@ import { resource, z } from "github.com/cloudticon/k8s@master";
 const MyResource = resource(apiVersion, kind, options);
 ```
 
-| Parameter      | Type     | Description                                              |
-| -------------- | -------- | -------------------------------------------------------- |
-| `apiVersion`   | `string` | Full API group and version, e.g. `apps.example.com/v1`. |
-| `kind`         | `string` | CRD kind name, e.g. `WebApp`.                           |
-| `options`      | `object` | Scope, schema, short names and other CRD metadata.      |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `apiVersion` | `string` | Full API group and version, e.g. `apps.example.com/v1`. |
+| `kind` | `string` | CRD kind name, e.g. `WebApp`. |
+| `options` | `object` | Scope, schema, short names and other CRD metadata. |
 
 ## Options
 
-| Field        | Type                          | Required | Description                                                  |
-| ------------ | ----------------------------- | -------- | ------------------------------------------------------------ |
-| `scope`      | `"Namespaced"` \| `"Cluster"` | yes      | Whether the resource lives in a namespace or is cluster-wide. |
-| `spec`       | Zod schema object             | yes      | User-provided desired state.                                 |
-| `status`     | Zod schema object             | no       | Runtime-owned observed state (never authored by users).      |
-| `shortNames` | `string[]`                    | no       | Aliases for `kubectl` (e.g. `["wa"]` → `kubectl get wa`).   |
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `scope` | `"Namespaced"` \| `"Cluster"` | yes | Whether the resource lives in a namespace or is cluster-wide. |
+| `spec` | Zod schema object | yes | User-provided desired state. |
+| `status` | Zod schema object | no | Runtime-owned observed state (never authored by users). |
+| `shortNames` | `string[]` | no | Aliases for `kubectl` (e.g. `["wa"]` → `kubectl get wa`). |
 
 ## Minimal example
 
@@ -117,4 +117,4 @@ import { deployment, service, ingress } from "github.com/cloudticon/k8s@master";
 ```
 
 These follow the same pattern — they are thin, typed wrappers that emit standard manifests.
-Use them directly or compose them inside [Factory Helpers](/k8s/factory-helpers/).
+Use them directly or compose them inside [Factory Helpers](/patterns/factory-helpers/).

@@ -8,7 +8,7 @@ description: Install, update, and verify CT — all supported methods, platforms
 ### Official installer (recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/cloudticon/ct/master/install.sh | sudo sh
+curl -fsSL https://cloudticon.com/install.sh | sudo sh
 ```
 
 The script detects your OS and architecture, downloads the matching binary, and places it in `/usr/local/bin/ct`.
@@ -37,7 +37,7 @@ sudo mv ct /usr/local/bin/
 Re-run the same install command you used originally — the installer overwrites the existing binary:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/cloudticon/ct/master/install.sh | sudo sh
+curl -fsSL https://cloudticon.com/install.sh | sudo sh
 ```
 
 For `go install`, simply run the command again — Go fetches the latest tag:
@@ -284,7 +284,7 @@ alias cta='ct apply . --namespace'
 ls -l /usr/local/bin/ct
 ```
 
-3. If you used `go install`, make sure `$GOPATH/bin` is in `PATH`:
+1. If you used `go install`, make sure `$GOPATH/bin` is in `PATH`:
 
 ```bash
 export PATH="$PATH:$(go env GOPATH)/bin"
@@ -295,7 +295,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 Run the installer with `sudo`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/cloudticon/ct/master/install.sh | sudo sh
+curl -fsSL https://cloudticon.com/install.sh | sudo sh
 ```
 
 If your system policy blocks `sudo`, install via `go install` or build from source into a directory you own.
@@ -317,11 +317,11 @@ CT resolves `github.com/…` imports at bundle time. If they fail:
 rm -rf ~/.ct/cache/
 ```
 
-3. Re-run `ct template .`.
+1. Re-run `ct template .`.
 
 ## Next steps
 
 - **[CLI Reference](/ct/cli-reference/)** — full command and flag guide.
 - **[CT VS Code](/ct-vscode/overview/)** — editor integration and IntelliSense.
-- **[K8s Factories](/k8s/base-primitive/)** — reusable resource helpers.
+- **[K8s Factories](/patterns/base-primitive/)** — reusable resource helpers.
 - **[CT Dev](/ct/ct-dev/)** — live development mode on a cluster.

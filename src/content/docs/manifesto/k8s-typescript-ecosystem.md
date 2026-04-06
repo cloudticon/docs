@@ -23,7 +23,7 @@ TypeScript, reusable `resource()` factories, and deterministic `ct` workflows re
 ## Repository contracts
 
 | Repository | Role |
-|---|---|
+| --- | --- |
 | `cloudticon/ct` | Runtime, bundling, values merge, type generation. |
 | `cloudticon/k8s` | Primitives: `resource()`, `z`, operator helpers. |
 | `cloudticon/ct-vscode` | IDE flow aligned with `ct types`. |

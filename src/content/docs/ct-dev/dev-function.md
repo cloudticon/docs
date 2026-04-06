@@ -242,6 +242,7 @@ interface SyncRule {
 | `polling` | `boolean` | no | Use polling mode instead of fsnotify. Useful for network filesystems or Docker Desktop volumes. Default: `false`. |
 
 Sync implementation uses `tar` + `kubectl exec`:
+
 - **Initial sync** — full directory tar streamed on startup.
 - **Incremental sync** — fsnotify watches for changes, 300ms debounce, only changed files are synced.
 

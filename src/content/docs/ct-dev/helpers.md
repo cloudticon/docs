@@ -9,7 +9,7 @@ CT Dev provides two helper globals for parameterizing `dev.ct` — `env()` for e
 
 Read an environment variable from the merged `.env` file + system environment.
 
-### Signature
+### env() signature
 
 ```ts
 function env(name: string): string
@@ -21,7 +21,7 @@ function env<T extends number>(name: string, defaultValue: T): T | string
 | `name` | `string` | yes | Environment variable name. |
 | `defaultValue` | `T` | no | Fallback value if the variable is not set. Also controls type coercion. |
 
-### Return value
+### env() return value
 
 | Scenario | Return |
 | --- | --- |
@@ -67,7 +67,7 @@ env("DB_HOST")     // → "localhost" (from .env)
 env("MISSING")     // → ""
 ```
 
-### Examples
+### env() examples
 
 ```ts
 // Simple string read
@@ -103,7 +103,7 @@ config({
 
 Interactively prompt the user for input. Answers are **cached** on disk so subsequent runs reuse the previous answer without asking again.
 
-### Signature
+### prompt() signature
 
 ```ts
 function prompt(question: string): string
@@ -113,7 +113,7 @@ function prompt(question: string): string
 | --- | --- | --- | --- |
 | `question` | `string` | yes | The question text displayed to the user. |
 
-### Return value
+### prompt() return value
 
 `string` — the user's trimmed answer (leading/trailing whitespace removed).
 
@@ -123,7 +123,7 @@ Answers are persisted to `~/.ct/prompt_cache/<project-hash>.json`, keyed by the 
 
 | Run | Behavior |
 | --- | --- |
-| First run | Prints `question: ` and waits for stdin input. Saves answer to cache. |
+| First run | Prints `question:` and waits for stdin input. Saves answer to cache. |
 | Subsequent runs | Prints `question [cached: answer]` and returns immediately. |
 
 The cache file is a simple JSON map:
@@ -139,7 +139,7 @@ To reset a cached answer, delete or edit `~/.ct/prompt_cache/<hash>.json`.
 
 The project hash is derived from the absolute path of the project directory (`SHA-256`, first 8 bytes, hex-encoded).
 
-### Examples
+### prompt() examples
 
 ```ts
 // Per-developer namespace

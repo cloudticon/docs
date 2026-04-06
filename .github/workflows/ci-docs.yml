@@ -25,10 +25,20 @@ jobs:
       - name: Build docs
         run: npm run build
 
-      # - name: Markdown lint
-      #   uses: DavidAnson/markdownlint-cli2-action@v18
+      - name: Markdown lint
+        uses: DavidAnson/markdownlint-cli2-action@v18
 
       - name: Link checker
         uses: lycheeverse/lychee-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: --verbose --no-progress --accept 200,429 "./src/content/docs/**/*.md"
+          args: >-
+            --verbose
+            --no-progress
+            --base-url https://cloudticon.com
+            --accept 200,429
+            --max-retries 3
+            --retry-wait-time 2
+            --timeout 20
+            "./src/content/docs/**/*.md"

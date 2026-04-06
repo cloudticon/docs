@@ -8,7 +8,7 @@ description: Install CT, global flags, end-to-end scenarios, troubleshooting, an
 One-line install (Linux/macOS):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/cloudticon/ct/master/install.sh | sudo sh
+curl -fsSL https://cloudticon.com/install.sh | sudo sh
 ```
 
 Via `go install`:

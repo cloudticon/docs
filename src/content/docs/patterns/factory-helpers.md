@@ -5,7 +5,7 @@ description: Build reusable app-level factories on top of resource() and share t
 
 ## Why factory helpers
 
-[`resource()`](/k8s/base-primitive/) gives a low-level primitive that is easy to standardize.
+[`resource()`](/patterns/base-primitive/) gives a low-level primitive that is easy to standardize.
 Factory helpers wrap it to encode **naming conventions**, **labels**, **security defaults**,
 and **resource limits** — so every team gets production-grade manifests without copy-pasting boilerplate.
 
@@ -113,4 +113,4 @@ packages/
 ```
 
 Keep factories small and focused. For sharing them across repos, see
-[Shared Factories](/k8s/shared-factories/).
+[Shared Factories](/patterns/shared-factories/).

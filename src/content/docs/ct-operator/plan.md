@@ -16,7 +16,7 @@ Core goals:
 
 ## Phase 4: Core runtime and controller
 
-## Scope
+## Scope (Phase 4)
 
 - runtime loader for `operator.ct` bundle
 - Goja VM callbacks: `getStatus`, `getObserved`, `setStatus`, `randomString`, `fetch`, `log`, `Env`, `Values`
@@ -49,7 +49,7 @@ ct-operator run [dir] [flags]
 
 ## Phase 5: Deploy and packaging
 
-## Scope
+## Scope (Phase 5)
 
 - `ct-operator manifests` command
 - CRD generation from `openAPISchema`

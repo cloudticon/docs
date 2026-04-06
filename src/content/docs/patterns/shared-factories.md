@@ -10,7 +10,7 @@ No npm registry required — just a GitHub repo and a version tag.
 ## How it works
 
 1. Create a repository with your factory helpers (e.g. `github.com/your-org/k8s-platform`).
-2. Export typed functions that compose [`resource()`](/k8s/base-primitive/) and built-in helpers.
+2. Export typed functions that compose [`resource()`](/patterns/base-primitive/) and built-in helpers.
 3. Tag releases with semver (`v1.0.0`, `v1.1.0`, …).
 4. Import by URL in any other repo — pinned to a tag.
 
@@ -220,13 +220,13 @@ import { prometheusStack } from "github.com/my-org/k8s-platform-observability@v1
 
 ## Versioning best practices
 
-| Rule                                            | Why                                                      |
-| ----------------------------------------------- | -------------------------------------------------------- |
-| Tag every release with semver                   | Consumers pin to an exact version — no surprises.        |
-| Never break required fields in a patch release  | `v1.0.1` must be a drop-in replacement for `v1.0.0`.    |
-| Add new optional fields in minor releases       | `v1.1.0` can add `ingressAnnotations?: Record<…>`.      |
-| Bump major for breaking changes                 | `v2.0.0` can rename or remove fields.                   |
-| Keep a changelog focused on contract changes    | Consumers care about inputs/outputs, not internal diffs. |
+| Rule | Why |
+| --- | --- |
+| Tag every release with semver | Consumers pin to an exact version — no surprises. |
+| Never break required fields in a patch release | `v1.0.1` must be a drop-in replacement for `v1.0.0`. |
+| Add new optional fields in minor releases | `v1.1.0` can add `ingressAnnotations?: Record<…>`. |
+| Bump major for breaking changes | `v2.0.0` can rename or remove fields. |
+| Keep a changelog focused on contract changes | Consumers care about inputs/outputs, not internal diffs. |
 
 ## Testing shared factories
 

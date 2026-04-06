@@ -73,7 +73,7 @@ webService({
 });
 ```
 
-See the full walkthrough in [Shared Factories](/k8s/shared-factories/) — creating a repo, tagging releases, importing across multiple services.
+See the full walkthrough in [Shared Factories](/patterns/shared-factories/) — creating a repo, tagging releases, importing across multiple services.
 
 ## Level 4: High-level library (`k8s-factories`)
 
